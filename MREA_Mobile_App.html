@@ -1,0 +1,2223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a1628">
+<title>Casa RGP Agent OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & Base ───────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:        #0a1628;
+    --navy-mid:    #0f2040;
+    --navy-light:  #1a3055;
+    --card:        #111e30;
+    --card-hover:  #162540;
+    --border:      rgba(255,255,255,0.08);
+    --border-light:rgba(255,255,255,0.14);
+    --gold:        #c9a84c;
+    --gold-light:  #e8c97a;
+    --gold-dim:    rgba(201,168,76,0.15);
+    --white:       #ffffff;
+    --text:        #e8edf5;
+    --text-muted:  #7a90a8;
+    --text-dim:    #4a607a;
+    --hot:         #e74c3c;
+    --hot-bg:      rgba(231,76,60,0.15);
+    --active:      #27ae60;
+    --active-bg:   rgba(39,174,96,0.15);
+    --nurture:     #e67e22;
+    --nurture-bg:  rgba(230,126,34,0.15);
+    --new-blue:    #3498db;
+    --new-bg:      rgba(52,152,219,0.15);
+    --closed:      #148f77;
+    --closed-bg:   rgba(20,143,119,0.15);
+    --radius:      16px;
+    --radius-sm:   10px;
+    --shadow:      0 4px 24px rgba(0,0,0,0.4);
+    --shadow-lg:   0 8px 40px rgba(0,0,0,0.6);
+    --font-display:'Cormorant Garamond', serif;
+    --font-body:   'DM Sans', sans-serif;
+    --nav-h:       64px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  html, body {
+    height: 100%; width: 100%;
+    background: var(--navy);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── App Shell ──────────────────────────────────────────────────────── */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* ── Header ─────────────────────────────────────────────────────────── */
+  #header {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px 10px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-logo {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+  .header-logo span {
+    display: block;
+    font-size: 10px;
+    font-family: var(--font-body);
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .header-date {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: right;
+  }
+  .header-date strong {
+    display: block;
+    color: var(--text);
+    font-size: 13px;
+  }
+
+  /* Health Score pill in header */
+  .health-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--gold-dim);
+    border: 1px solid var(--gold);
+    border-radius: 20px;
+    padding: 5px 12px;
+    margin-top: 10px;
+    width: fit-content;
+  }
+  .health-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .health-dot.green  { background: var(--active); box-shadow: 0 0 8px var(--active); }
+  .health-dot.yellow { background: var(--nurture); box-shadow: 0 0 8px var(--nurture); }
+  .health-dot.red    { background: var(--hot); box-shadow: 0 0 8px var(--hot); }
+  .health-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+  }
+  .health-score {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: 2px;
+  }
+
+  /* ── Page Scroll Container ───────────────────────────────────────────── */
+  #pages {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+  .page {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 16px calc(var(--nav-h) + 20px + var(--safe-bottom));
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .page.active {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateY(0);
+  }
+
+  /* ── Bottom Nav ─────────────────────────────────────────────────────── */
+  #nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: calc(var(--nav-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: linear-gradient(180deg, rgba(10,22,40,0.95) 0%, var(--navy) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    padding: 8px 4px;
+    position: relative;
+  }
+  .nav-btn.active { color: var(--gold); }
+  .nav-btn.active::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 20%; right: 20%;
+    height: 2px;
+    background: var(--gold);
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 0 10px var(--gold);
+  }
+  .nav-icon { font-size: 20px; line-height: 1; }
+
+  /* ── Cards ──────────────────────────────────────────────────────────── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .card:active { transform: scale(0.98); }
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Section Header ─────────────────────────────────────────────────── */
+  .section-hdr {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: 0.01em;
+    margin-bottom: 4px;
+  }
+  .section-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  /* ── KPI Grid ───────────────────────────────────────────────────────── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .kpi-cell {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-cell::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .kpi-cell.gold::before { background: var(--gold); }
+  .kpi-cell.green::before { background: var(--active); }
+  .kpi-cell.red::before { background: var(--hot); }
+  .kpi-cell.blue::before { background: var(--new-blue); }
+  .kpi-cell.orange::before { background: var(--nurture); }
+  .kpi-cell.teal::before { background: var(--closed); }
+  .kpi-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .kpi-value {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--white);
+  }
+  .kpi-value.gold { color: var(--gold); }
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .kpi-status {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 6px;
+  }
+  .kpi-status.on-track { background: var(--active-bg); color: var(--active); }
+  .kpi-status.at-risk  { background: var(--nurture-bg); color: var(--nurture); }
+  .kpi-status.critical { background: var(--hot-bg); color: var(--hot); }
+
+  /* ── Progress Bar ───────────────────────────────────────────────────── */
+  .progress-wrap { margin: 8px 0; }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .progress-label strong { color: var(--text); }
+  .progress-track {
+    height: 6px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .progress-fill.gold   { background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+  .progress-fill.green  { background: linear-gradient(90deg, var(--active), #2ecc71); }
+  .progress-fill.orange { background: linear-gradient(90deg, var(--nurture), #f39c12); }
+  .progress-fill.red    { background: linear-gradient(90deg, var(--hot), #e74c3c); }
+
+  /* ── Quick Log Button ───────────────────────────────────────────────── */
+  .fab {
+    position: fixed;
+    bottom: calc(var(--nav-h) + 16px + var(--safe-bottom));
+    right: 20px;
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    box-shadow: 0 4px 20px rgba(201,168,76,0.5);
+    z-index: 90;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .fab:active {
+    transform: scale(0.92);
+    box-shadow: 0 2px 10px rgba(201,168,76,0.3);
+  }
+
+  /* ── Modal / Sheet ──────────────────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-sheet {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: var(--navy-mid);
+    border-radius: 24px 24px 0 0;
+    border: 1px solid var(--border-light);
+    border-bottom: none;
+    padding: 0 0 calc(20px + var(--safe-bottom));
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+  .modal-overlay.open .modal-sheet { transform: translateY(0); }
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--border-light);
+    border-radius: 2px;
+    margin: 12px auto 16px;
+  }
+  .modal-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--white);
+    padding: 0 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-body { padding: 20px; }
+
+  /* ── Form Elements ──────────────────────────────────────────────────── */
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    background: var(--navy-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--gold);
+  }
+  .form-textarea { resize: none; min-height: 80px; }
+  .form-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a90a8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .form-select option { background: var(--navy-mid); color: var(--text); }
+
+  /* ── Buttons ─────────────────────────────────────────────────────────── */
+  .btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: transform 0.15s, opacity 0.15s;
+  }
+  .btn:active { transform: scale(0.97); opacity: 0.85; }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--navy);
+  }
+  .btn-secondary {
+    background: rgba(255,255,255,0.07);
+    color: var(--text);
+    border: 1px solid var(--border-light);
+    margin-top: 10px;
+  }
+  .btn-danger {
+    background: var(--hot-bg);
+    color: var(--hot);
+    border: 1px solid rgba(231,76,60,0.3);
+    margin-top: 10px;
+  }
+
+  /* ── Status Badge ───────────────────────────────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .badge-hot      { background: var(--hot-bg);     color: var(--hot); }
+  .badge-active   { background: var(--active-bg);  color: var(--active); }
+  .badge-nurture  { background: var(--nurture-bg); color: var(--nurture); }
+  .badge-new      { background: var(--new-bg);     color: var(--new-blue); }
+  .badge-contract { background: rgba(201,168,76,0.15); color: var(--gold); }
+  .badge-closed   { background: var(--closed-bg);  color: var(--closed); }
+
+  /* ── Lead / Listing Row ─────────────────────────────────────────────── */
+  .list-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .list-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+  }
+  .list-item.hot::before      { background: var(--hot); }
+  .list-item.active::before   { background: var(--active); }
+  .list-item.nurture::before  { background: var(--nurture); }
+  .list-item.new-lead::before { background: var(--new-blue); }
+  .list-item.contract::before { background: var(--gold); }
+  .list-item:active { background: var(--card-hover); border-color: var(--border-light); }
+  .list-avatar {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 700;
+    flex-shrink: 0;
+    color: var(--white);
+  }
+  .list-avatar.hot      { background: var(--hot-bg); color: var(--hot); border: 1px solid rgba(231,76,60,0.3); }
+  .list-avatar.active   { background: var(--active-bg); color: var(--active); border: 1px solid rgba(39,174,96,0.3); }
+  .list-avatar.nurture  { background: var(--nurture-bg); color: var(--nurture); border: 1px solid rgba(230,126,34,0.3); }
+  .list-avatar.new-lead { background: var(--new-bg); color: var(--new-blue); border: 1px solid rgba(52,152,219,0.3); }
+  .list-avatar.contract { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+  .list-info { flex: 1; min-width: 0; }
+  .list-name {
+    font-weight: 600;
+    color: var(--white);
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .list-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .list-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* ── Activity Log Items ─────────────────────────────────────────────── */
+  .activity-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    background: var(--navy-light);
+  }
+  .activity-content { flex: 1; }
+  .activity-name { font-weight: 600; color: var(--text); font-size: 14px; }
+  .activity-detail { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .activity-time { font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
+
+  /* ── Checklist ──────────────────────────────────────────────────────── */
+  .checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .checklist-item.done { opacity: 0.45; }
+  .check-box {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    border: 2px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    font-size: 13px;
+  }
+  .checklist-item.done .check-box {
+    background: var(--active);
+    border-color: var(--active);
+    color: white;
+  }
+  .check-label { font-size: 14px; color: var(--text); flex: 1; }
+  .check-time { font-size: 11px; color: var(--text-dim); }
+
+  /* ── Filter Pills ───────────────────────────────────────────────────── */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    margin-bottom: 14px;
+    scrollbar-width: none;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-pill {
+    flex-shrink: 0;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+    transition: all 0.2s;
+  }
+  .filter-pill.active {
+    background: var(--gold-dim);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* ── Divider ────────────────────────────────────────────────────────── */
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  /* ── Toast ──────────────────────────────────────────────────────────── */
+  #toast {
+    position: fixed;
+    bottom: calc(var(--nav-h) + 80px + var(--safe-bottom));
+    left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--active);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 300;
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ── Empty state ────────────────────────────────────────────────────── */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-dim);
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-text { font-size: 14px; }
+
+  /* ── GCI Banner ─────────────────────────────────────────────────────── */
+  .gci-banner {
+    background: linear-gradient(135deg, var(--navy-mid) 0%, rgba(201,168,76,0.08) 100%);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .gci-banner::after {
+    content: '🏠';
+    position: absolute;
+    right: 16px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 48px;
+    opacity: 0.08;
+  }
+  .gci-label { font-size: 11px; color: var(--gold); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; }
+  .gci-amount {
+    font-family: var(--font-display);
+    font-size: 42px;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1.1;
+    margin: 4px 0;
+  }
+  .gci-goal { font-size: 13px; color: var(--text-muted); }
+  .gci-goal strong { color: var(--text); }
+
+  /* ── Pivot Alert ────────────────────────────────────────────────────── */
+  .pivot-alert {
+    background: var(--hot-bg);
+    border: 1px solid rgba(231,76,60,0.3);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .pivot-alert .icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .pivot-title { font-size: 13px; font-weight: 600; color: var(--hot); }
+  .pivot-action { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+  /* ── Tab Selector ───────────────────────────────────────────────────── */
+  .tab-row {
+    display: flex;
+    background: var(--navy-light);
+    border-radius: var(--radius-sm);
+    padding: 4px;
+    margin-bottom: 16px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    background: var(--gold);
+    color: var(--navy);
+  }
+
+  /* ── Subtle animation on load ───────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .card, .kpi-cell, .list-item {
+    animation: fadeUp 0.35s ease both;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── HEADER ─────────────────────────────────────────────────────── -->
+  <div id="header">
+    <div class="header-top">
+      <div class="header-logo">
+        Casa RGP
+        <span>Agent Operating System</span>
+      </div>
+      <div class="header-date">
+        <strong id="today-day">Monday</strong>
+        <span id="today-date">Feb 26, 2026</span>
+      </div>
+    </div>
+    <div class="health-pill" id="health-pill">
+      <div class="health-dot green" id="health-dot"></div>
+      <span class="health-label" id="health-label">HEALTHY</span>
+      <span class="health-score" id="health-score">84% Business Score</span>
+    </div>
+  </div>
+
+  <!-- ── PAGES ──────────────────────────────────────────────────────── -->
+  <div id="pages">
+
+    <!-- ════ PAGE 1: DASHBOARD ════════════════════════════════════════ -->
+    <div class="page active" id="page-dashboard">
+      <div class="section-hdr">Dashboard</div>
+      <div class="section-sub">Today's performance at a glance</div>
+
+      <!-- GCI Banner -->
+      <div class="gci-banner">
+        <div class="gci-label">GCI This Month</div>
+        <div class="gci-amount" id="d-gci">$27,300</div>
+        <div class="gci-goal">Goal: <strong>$45,000</strong> &nbsp;·&nbsp; <span style="color:var(--nurture)">61% achieved</span></div>
+      </div>
+
+      <!-- KPI Grid -->
+      <div class="kpi-grid">
+        <div class="kpi-cell gold">
+          <div class="kpi-label">📞 Calls Today</div>
+          <div class="kpi-value gold" id="d-calls">14</div>
+          <div class="kpi-sub">Goal: 20</div>
+          <div class="kpi-status at-risk">🟡 At Risk</div>
+        </div>
+        <div class="kpi-cell green">
+          <div class="kpi-label">🤝 Appointments</div>
+          <div class="kpi-value" id="d-appts">3</div>
+          <div class="kpi-sub">Goal: 3</div>
+          <div class="kpi-status on-track">🟢 On Track</div>
+        </div>
+        <div class="kpi-cell blue">
+          <div class="kpi-label">🆕 New Leads</div>
+          <div class="kpi-value" id="d-leads">2</div>
+          <div class="kpi-sub">Goal: 5</div>
+          <div class="kpi-status critical">🔴 Critical</div>
+        </div>
+        <div class="kpi-cell orange">
+          <div class="kpi-label">📝 Active Listings</div>
+          <div class="kpi-value" id="d-listings">4</div>
+          <div class="kpi-sub">Goal: 4</div>
+          <div class="kpi-status on-track">🟢 On Track</div>
+        </div>
+        <div class="kpi-cell teal">
+          <div class="kpi-label">⏳ Pipeline Leads</div>
+          <div class="kpi-value" id="d-pipeline">22</div>
+          <div class="kpi-sub">Goal: 20</div>
+          <div class="kpi-status on-track">🟢 On Track</div>
+        </div>
+        <div class="kpi-cell red">
+          <div class="kpi-label">🔑 Closings/Mo</div>
+          <div class="kpi-value" id="d-closings">3</div>
+          <div class="kpi-sub">Goal: 3</div>
+          <div class="kpi-status on-track">🟢 On Track</div>
+        </div>
+      </div>
+
+      <!-- Progress Bars -->
+      <div class="card">
+        <div class="card-title">📊 Monthly Progress</div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>GCI Goal</span><strong>$27,300 / $45,000</strong></div>
+          <div class="progress-track"><div class="progress-fill gold" style="width:61%"></div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Closings</span><strong>3 / 3</strong></div>
+          <div class="progress-track"><div class="progress-fill green" style="width:100%"></div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>Daily Calls</span><strong>14 / 20</strong></div>
+          <div class="progress-track"><div class="progress-fill orange" style="width:70%"></div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="progress-wrap">
+          <div class="progress-label"><span>New Leads Today</span><strong>2 / 5</strong></div>
+          <div class="progress-track"><div class="progress-fill red" style="width:40%"></div></div>
+        </div>
+      </div>
+
+      <!-- Pivot Alerts -->
+      <div class="card">
+        <div class="card-title">🔁 Pivot Alerts</div>
+        <div class="pivot-alert">
+          <div class="icon">🚨</div>
+          <div>
+            <div class="pivot-title">New Leads Below Target</div>
+            <div class="pivot-action">Only 2 of 5 daily leads logged. Host an open house or door knock your farm this afternoon.</div>
+          </div>
+        </div>
+        <div class="pivot-alert">
+          <div class="icon">⚠️</div>
+          <div>
+            <div class="pivot-title">Calls At Risk (70%)</div>
+            <div class="pivot-action">14 of 20 calls made. Block 30 min before end of day to hit your number.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Today's Checklist -->
+      <div class="card">
+        <div class="card-title">✅ Today's Tasks</div>
+        <div id="checklist-container"></div>
+      </div>
+
+      <!-- Pipeline Value -->
+      <div class="card" style="background: linear-gradient(135deg, var(--card), rgba(39,174,96,0.05)); border-color: rgba(39,174,96,0.2);">
+        <div class="card-title">💼 Pipeline Value</div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-family: var(--font-display); font-size:28px; color: var(--active); font-weight:700;">$198,000</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">22 active leads × $9,000 avg commission</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="badge badge-active">Healthy</div>
+            <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">2× monthly goal ✓</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE 2: LEADS ════════════════════════════════════════════ -->
+    <div class="page" id="page-leads">
+      <div class="section-hdr">Lead Pipeline</div>
+      <div class="section-sub" id="lead-count">Loading leads...</div>
+
+      <div class="filter-row" id="lead-filters">
+        <button class="filter-pill active" onclick="filterLeads('All')">All</button>
+        <button class="filter-pill" onclick="filterLeads('Hot')">🔴 Hot</button>
+        <button class="filter-pill" onclick="filterLeads('Active')">🟢 Active</button>
+        <button class="filter-pill" onclick="filterLeads('Nurture')">🟠 Nurture</button>
+        <button class="filter-pill" onclick="filterLeads('New')">🔵 New</button>
+      </div>
+
+      <div id="leads-list"></div>
+    </div>
+
+    <!-- ════ PAGE 3: LOG ACTIVITY ═════════════════════════════════════ -->
+    <div class="page" id="page-log">
+      <div class="section-hdr">Log Activity</div>
+      <div class="section-sub">Record every call, appointment, and contact</div>
+
+      <!-- Quick Action Buttons -->
+      <div class="card">
+        <div class="card-title">⚡ Quick Log</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <button class="btn btn-primary" style="padding:12px; font-size:14px;" onclick="quickLog('Call')">📞 Log Call</button>
+          <button class="btn btn-primary" style="padding:12px; font-size:14px; background:linear-gradient(135deg,#27ae60,#2ecc71); color:white;" onclick="quickLog('Appointment')">🤝 Log Appt</button>
+          <button class="btn btn-primary" style="padding:12px; font-size:14px; background:linear-gradient(135deg,#3498db,#5dade2); color:white;" onclick="quickLog('New Lead')">🆕 New Lead</button>
+          <button class="btn btn-primary" style="padding:12px; font-size:14px; background:linear-gradient(135deg,#8e44ad,#9b59b6); color:white;" onclick="quickLog('Open House')">🏠 Open House</button>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="card">
+        <div class="card-title">📋 Today's Activity</div>
+        <div id="activity-log-list"></div>
+      </div>
+    </div>
+
+    <!-- ════ PAGE 4: LISTINGS & BUYERS ════════════════════════════════ -->
+    <div class="page" id="page-manage">
+      <div class="section-hdr">Manage</div>
+
+      <div class="tab-row">
+        <button class="tab-btn active" id="tab-listings" onclick="switchTab('listings')">🏠 Listings</button>
+        <button class="tab-btn" id="tab-buyers" onclick="switchTab('buyers')">👥 Buyers</button>
+      </div>
+
+      <div id="listings-panel">
+        <div id="listings-list"></div>
+        <button class="btn btn-primary" onclick="openAddListing()" style="margin-top:4px;">+ Add New Listing</button>
+      </div>
+      <div id="buyers-panel" style="display:none;">
+        <div id="buyers-list"></div>
+        <button class="btn btn-primary" onclick="openAddBuyer()" style="margin-top:4px;">+ Add New Buyer</button>
+      </div>
+    </div>
+
+  </div><!-- /pages -->
+
+  <!-- ── BOTTOM NAV ─────────────────────────────────────────────────── -->
+  <nav id="nav">
+    <button class="nav-btn active" onclick="showPage('dashboard',this)">
+      <span class="nav-icon">📊</span>
+      <span>Dashboard</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('leads',this)">
+      <span class="nav-icon">👥</span>
+      <span>Pipeline</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('log',this)">
+      <span class="nav-icon">📋</span>
+      <span>Log</span>
+    </button>
+    <button class="nav-btn" onclick="showPage('manage',this)">
+      <span class="nav-icon">🏠</span>
+      <span>Manage</span>
+    </button>
+  </nav>
+
+</div><!-- /app -->
+
+<!-- FAB -->
+<button class="fab" onclick="openQuickAdd()" title="Quick Log">+</button>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ── MODALS ───────────────────────────────────────────────────────── -->
+
+<!-- Quick Log Modal -->
+<div class="modal-overlay" id="modal-log">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-log-title">Log Activity</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Contact Name</label>
+        <input class="form-input" id="log-name" placeholder="First Last" type="text" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Activity Type</label>
+        <select class="form-select" id="log-type">
+          <option value="Call">📞 Call</option>
+          <option value="Appointment">🤝 Appointment</option>
+          <option value="New Lead">🆕 New Lead</option>
+          <option value="Open House">🏠 Open House</option>
+          <option value="Showing">🔑 Showing</option>
+          <option value="Door Knock">🚪 Door Knock</option>
+          <option value="Touch">📬 Database Touch</option>
+          <option value="Referral">⭐ Referral</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lead Source</label>
+        <select class="form-select" id="log-source">
+          <option value="Open House">🏠 Open House</option>
+          <option value="Referral">⭐ Referral</option>
+          <option value="SOI">🤝 SOI</option>
+          <option value="Zillow">🌐 Zillow</option>
+          <option value="Realtor.com">🌐 Realtor.com</option>
+          <option value="Past Client">🔄 Past Client</option>
+          <option value="Door Knock">🚪 Door Knock</option>
+          <option value="Farm">🗺️ Farm</option>
+          <option value="Social Media">📱 Social Media</option>
+          <option value="Sign Call">🪧 Sign Call</option>
+          <option value="Other">➕ Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Outcome</label>
+        <select class="form-select" id="log-outcome">
+          <option value="Connected - Interested">✅ Connected — Interested</option>
+          <option value="Connected - Not Interested">❌ Connected — Not Interested</option>
+          <option value="Left VM">📨 Left Voicemail</option>
+          <option value="No Answer">🔕 No Answer</option>
+          <option value="Appointment Set">📅 Appointment Set</option>
+          <option value="Showing Scheduled">🔑 Showing Scheduled</option>
+          <option value="Offer Made">📝 Offer Made</option>
+          <option value="Contract Signed">🖊️ Contract Signed</option>
+          <option value="Pre-Approved">💳 Pre-Approved</option>
+          <option value="Closed">🏆 Closed</option>
+          <option value="Referral Received">⭐ Referral Received</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="log-notes" placeholder="What happened? Next steps?"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="saveActivity()">Save Activity</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-log')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Lead Modal -->
+<div class="modal-overlay" id="modal-lead">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add New Lead</div>
+    <div class="modal-body">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          <input class="form-input" id="lead-first" placeholder="First" type="text">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          <input class="form-input" id="lead-last" placeholder="Last" type="text">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input class="form-input" id="lead-phone" placeholder="502-555-0000" type="tel">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="lead-email" placeholder="email@example.com" type="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="lead-status">
+          <option value="Hot">🔴 Hot</option>
+          <option value="Active" selected>🟢 Active</option>
+          <option value="Nurture">🟠 Nurture</option>
+          <option value="New">🔵 New</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lead Source</label>
+        <select class="form-select" id="lead-source-new">
+          <option value="Open House">🏠 Open House</option>
+          <option value="Referral">⭐ Referral</option>
+          <option value="SOI">🤝 SOI</option>
+          <option value="Zillow">🌐 Zillow</option>
+          <option value="Past Client">🔄 Past Client</option>
+          <option value="Door Knock">🚪 Door Knock</option>
+          <option value="Social Media">📱 Social Media</option>
+          <option value="Other">➕ Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-select" id="lead-type">
+          <option value="Buyer">🔵 Buyer</option>
+          <option value="Seller">🔴 Seller</option>
+          <option value="Both">🟣 Both</option>
+          <option value="Investor">🟡 Investor</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Timeline</label>
+        <select class="form-select" id="lead-timeline">
+          <option value="0-3 months">🔴 0-3 months</option>
+          <option value="3-6 months">🟠 3-6 months</option>
+          <option value="6-12 months">🟡 6-12 months</option>
+          <option value="1-2 years">🔵 1-2 years</option>
+          <option value="2+ years">⚫ 2+ years</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price Range</label>
+        <input class="form-input" id="lead-price" placeholder="e.g. $250K - $350K" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="lead-notes" placeholder="Any relevant details..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="saveLead()">Add to Pipeline</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-lead')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Listing Modal -->
+<div class="modal-overlay" id="modal-listing">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add New Listing</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Property Address</label>
+        <input class="form-input" id="listing-address" placeholder="123 Main St, Louisville KY" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Seller Name</label>
+        <input class="form-input" id="listing-seller" placeholder="Client Name" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Seller Phone</label>
+        <input class="form-input" id="listing-phone" placeholder="502-555-0000" type="tel">
+      </div>
+      <div class="form-group">
+        <label class="form-label">List Price</label>
+        <input class="form-input" id="listing-price" placeholder="$350,000" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="listing-status">
+          <option value="Active">🟢 Active</option>
+          <option value="Coming Soon">🟣 Coming Soon</option>
+          <option value="Under Contract">🟠 Under Contract</option>
+          <option value="Sold">🔵 Sold</option>
+          <option value="Expired">🔴 Expired</option>
+          <option value="Price Reduced">🟡 Price Reduced</option>
+          <option value="Withdrawn">⚫ Withdrawn</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Target Close Date</label>
+        <input class="form-input" id="listing-close" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="listing-notes" placeholder="Seller motivation, showing instructions..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="saveListing()">Save Listing</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-listing')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Buyer Modal -->
+<div class="modal-overlay" id="modal-buyer">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add New Buyer</div>
+    <div class="modal-body">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          <input class="form-input" id="buyer-first" placeholder="First" type="text">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          <input class="form-input" id="buyer-last" placeholder="Last" type="text">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input class="form-input" id="buyer-phone" placeholder="502-555-0000" type="tel">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="buyer-status">
+          <option value="Hot">🔴 Hot</option>
+          <option value="Active" selected>🟢 Active</option>
+          <option value="Nurture">🟠 Nurture</option>
+          <option value="New">🔵 New</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pre-Approved?</label>
+        <select class="form-select" id="buyer-preapproved">
+          <option value="Yes">🟢 Yes</option>
+          <option value="No" selected>🔴 No</option>
+          <option value="In Progress">🟠 In Progress</option>
+          <option value="Expired">⚫ Expired</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pre-Approval Amount</label>
+        <input class="form-input" id="buyer-preapproval-amt" placeholder="$350,000" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pre-Approval Expires</label>
+        <input class="form-input" id="buyer-preapproval-exp" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lender Name</label>
+        <input class="form-input" id="buyer-lender" placeholder="Lender or bank name" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lender Phone</label>
+        <input class="form-input" id="buyer-lender-phone" placeholder="502-555-0000" type="tel">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price Range</label>
+        <input class="form-input" id="buyer-price" placeholder="$250K - $350K" type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Preferred Neighborhoods</label>
+        <input class="form-input" id="buyer-neighborhood" placeholder="Highlands, St. Matthews..." type="text">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Timeline</label>
+        <select class="form-select" id="buyer-timeline">
+          <option value="0-3 months">🔴 0-3 months</option>
+          <option value="3-6 months">🟠 3-6 months</option>
+          <option value="6-12 months">🟡 6-12 months</option>
+          <option value="1-2 years">🔵 1-2 years</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Must Haves</label>
+        <textarea class="form-textarea" id="buyer-musthaves" placeholder="3BR, 2BA, garage, good schools..." style="min-height:60px;"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Deal Breakers</label>
+        <textarea class="form-textarea" id="buyer-dealbreakers" placeholder="HOA fees, busy road, no garage..." style="min-height:60px;"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="saveBuyer()">Save Buyer</button>
+      <button class="btn btn-secondary" onclick="closeModal('modal-buyer')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+const state = {
+  leads: [
+    { id:1, first:"John", last:"Smith", phone:"502-555-1001", email:"john@email.com", status:"Hot", source:"Open House", type:"Buyer", timeline:"0-3 months", price:"$250K-$350K", notes:"Loves Highlands, wants 3BR 2BA. Very motivated buyer.", touches:4 },
+    { id:2, first:"Sarah", last:"Johnson", phone:"502-555-1002", email:"sarah@email.com", status:"Active", source:"Zillow", type:"Seller", timeline:"3-6 months", price:"$400K-$500K", notes:"Needs to sell before buying. Pre-listing walkthrough done.", touches:1 },
+    { id:3, first:"Tom", last:"Wilson", phone:"502-555-1005", email:"tom@email.com", status:"Hot", source:"Past Client", type:"Seller", timeline:"0-3 months", price:"$550K+", notes:"Upgrading — has equity. Ready to list in March.", touches:6 },
+    { id:4, first:"Mike", last:"Davis", phone:"502-555-1003", email:"mike@email.com", status:"Nurture", source:"Referral", type:"Buyer", timeline:"6-12 months", price:"$175K-$225K", notes:"First time buyer, needs pre-qual. Connect with lender.", touches:2 },
+    { id:5, first:"Lisa", last:"Brown", phone:"502-555-1004", email:"lisa@email.com", status:"New", source:"Social Media", type:"Both", timeline:"0-3 months", price:"$300K-$450K", notes:"Saw Instagram ad. Call to qualify.", touches:0 },
+    { id:6, first:"Karen", last:"Hill", phone:"502-555-1006", email:"karen@email.com", status:"Active", source:"Referral", type:"Seller", timeline:"3-6 months", price:"$380K-$420K", notes:"Referred by Tom Wilson. Wants to list spring.", touches:3 },
+    { id:7, first:"Dave", last:"Park", phone:"502-555-1007", email:"dave@email.com", status:"Active", source:"Open House", type:"Buyer", timeline:"0-3 months", price:"$275K-$325K", notes:"Visited 456 Oak Ave open house. Interested in St. Matthews.", touches:2 },
+  ],
+  listings: [
+    { id:1, address:"123 Maple St, Louisville KY 40206", seller:"Tom Wilson", phone:"502-555-1005", price:"$550,000", status:"Active", dom:25, showings:8, notes:"Buyers like layout, concern over kitchen.", closeDate:"2026-04-01" },
+    { id:2, address:"456 Oak Ave, Louisville KY 40207", seller:"Pat Lee", phone:"502-555-1006", price:"$365,000", status:"Price Reduced", dom:16, showings:3, notes:"Price reduced from $375K. Feedback: originally overpriced.", closeDate:"2026-04-15" },
+    { id:3, address:"789 Pine Rd, Louisville KY 40208", seller:"Amy Chen", phone:"502-555-1007", price:"$290,000", status:"Under Contract", dom:22, showings:12, notes:"Under contract. Inspection cleared.", closeDate:"2026-03-22" },
+    { id:4, address:"234 Birch Ln, Louisville KY 40209", seller:"Greg Moore", phone:"502-555-1008", price:"$425,000", status:"Coming Soon", dom:0, showings:0, notes:"Going live March 1.", closeDate:"2026-05-01" },
+  ],
+  buyers: [
+    { id:1, first:"John", last:"Smith", phone:"502-555-1001", status:"Hot", preapproved:"Yes", preamt:"$350,000", price:"$250K-$350K", neighborhood:"Highlands", timeline:"0-3 months", showings:4, musthaves:"3BR, 2BA, garage, good schools" },
+    { id:2, first:"Mike", last:"Davis", phone:"502-555-1003", status:"Active", preapproved:"In Progress", preamt:"", price:"$175K-$225K", neighborhood:"Shively", timeline:"6-12 months", showings:1, musthaves:"Near bus line, move-in ready" },
+    { id:3, first:"Dave", last:"Park", phone:"502-555-1007", status:"Active", preapproved:"Yes", preamt:"$325,000", price:"$275K-$325K", neighborhood:"St. Matthews", timeline:"0-3 months", showings:3, musthaves:"Open floor plan, updated kitchen" },
+  ],
+  activities: [
+    { type:"Call", name:"John Smith", source:"Open House", outcome:"Connected - Interested", notes:"Wants to see listings in Highlands ASAP", time:"9:15 AM" },
+    { type:"Appointment", name:"Sarah Johnson", source:"Zillow", outcome:"Listing Presentation", notes:"Pre-listing walkthrough. CMA delivered.", time:"11:00 AM" },
+    { type:"New Lead", name:"Lisa Brown", source:"Social Media", outcome:"Left VM", notes:"Instagram ad. Called back, left voicemail.", time:"2:30 PM" },
+    { type:"Call", name:"Tom Wilson", source:"Past Client", outcome:"Appointment Set", notes:"Set listing appointment for Thursday.", time:"3:45 PM" },
+  ],
+  currentFilter: 'All',
+  currentTab: 'listings',
+};
+
+// Persist to localStorage
+function saveState() {
+  try {
+    localStorage.setItem('mrea_leads', JSON.stringify(state.leads));
+    localStorage.setItem('mrea_listings', JSON.stringify(state.listings));
+    localStorage.setItem('mrea_buyers', JSON.stringify(state.buyers));
+    localStorage.setItem('mrea_activities', JSON.stringify(state.activities));
+  } catch(e) {}
+}
+function loadState() {
+  try {
+    const leads = localStorage.getItem('mrea_leads');
+    const listings = localStorage.getItem('mrea_listings');
+    const buyers = localStorage.getItem('mrea_buyers');
+    const activities = localStorage.getItem('mrea_activities');
+    if (leads) state.leads = JSON.parse(leads);
+    if (listings) state.listings = JSON.parse(listings);
+    if (buyers) state.buyers = JSON.parse(buyers);
+    if (activities) state.activities = JSON.parse(activities);
+  } catch(e) {}
+}
+
+// ── Nav ──────────────────────────────────────────────────────────────────────
+function showPage(pageId, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
+  btn.classList.add('active');
+  if (pageId === 'leads') renderLeads();
+  if (pageId === 'manage') renderManage();
+  if (pageId === 'log') renderActivityLog();
+}
+
+// ── Date ─────────────────────────────────────────────────────────────────────
+function initDate() {
+  const now = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('today-day').textContent = days[now.getDay()];
+  document.getElementById('today-date').textContent = `${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+}
+
+// ── Status helpers ───────────────────────────────────────────────────────────
+function statusClass(s) {
+  const m = { Hot:'hot', Active:'active', Nurture:'nurture', New:'new-lead', 'Under Contract':'contract', 'Coming Soon':'contract', 'Price Reduced':'nurture', Sold:'closed', Closed:'closed' };
+  return m[s] || 'new-lead';
+}
+function statusBadge(s) {
+  const m = { Hot:'badge-hot', Active:'badge-active', Nurture:'badge-nurture', New:'badge-new', 'Under Contract':'badge-contract', 'Coming Soon':'badge-contract', 'Price Reduced':'badge-nurture', Sold:'badge-closed', Closed:'badge-closed' };
+  return m[s] || 'badge-new';
+}
+function initials(first, last) { return (first[0]||'') + (last[0]||''); }
+function actIcon(type) {
+  const m = { Call:'📞', Appointment:'🤝', 'New Lead':'🆕', 'Open House':'🏠', Showing:'🔑', 'Door Knock':'🚪', Touch:'📬', Referral:'⭐' };
+  return m[type] || '📋';
+}
+
+// ── Render Leads ─────────────────────────────────────────────────────────────
+function filterLeads(filter) {
+  state.currentFilter = filter;
+  document.querySelectorAll('.filter-pill').forEach(p => {
+    p.classList.toggle('active', p.textContent.includes(filter) || (filter==='All' && p.textContent==='All'));
+  });
+  renderLeads();
+}
+
+function renderLeads() {
+  const filtered = state.currentFilter === 'All'
+    ? [...state.leads].sort((a,b) => { const o=['Hot','Active','Nurture','New']; return (o.indexOf(a.status)||99)-(o.indexOf(b.status)||99); })
+    : state.leads.filter(l => l.status === state.currentFilter);
+
+  const count = state.leads.length;
+  const hot = state.leads.filter(l=>l.status==='Hot').length;
+  document.getElementById('lead-count').textContent = `${count} total · ${hot} hot leads`;
+
+  const el = document.getElementById('leads-list');
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">No ${state.currentFilter} leads yet</div></div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(l => `
+    <div class="list-item ${statusClass(l.status)}" onclick="openLeadDetail(${l.id})">
+      <div class="list-avatar ${statusClass(l.status)}">${initials(l.first,l.last)}</div>
+      <div class="list-info">
+        <div class="list-name">${l.first} ${l.last}</div>
+        <div class="list-meta">${l.type} · ${l.source} · ${l.timeline}</div>
+        <div class="list-meta" style="margin-top:4px; color:var(--text-dim); font-size:11px;">${l.price}</div>
+      </div>
+      <div class="list-right">
+        <span class="badge ${statusBadge(l.status)}">${l.status}</span>
+        <div style="font-size:11px; color:var(--text-dim);">${l.touches} touches</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openLeadDetail(id) {
+  const l = state.leads.find(x=>x.id===id);
+  if (!l) return;
+  showToast(`📞 ${l.first} ${l.last} — ${l.phone}`);
+}
+
+// ── Render Activity Log ───────────────────────────────────────────────────────
+function renderActivityLog() {
+  const el = document.getElementById('activity-log-list');
+  if (!state.activities.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No activity logged today yet</div></div>`;
+    return;
+  }
+  el.innerHTML = state.activities.map(a => `
+    <div class="activity-item">
+      <div class="activity-icon">${actIcon(a.type)}</div>
+      <div class="activity-content">
+        <div class="activity-name">${a.name}</div>
+        <div class="activity-detail">${a.type} · ${a.outcome || a.source}</div>
+        <div class="activity-detail" style="color:var(--text-dim); font-size:11px; margin-top:2px;">${a.notes}</div>
+      </div>
+      <div class="activity-time">${a.time}</div>
+    </div>
+  `).join('');
+}
+
+// ── Render Manage ────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  state.currentTab = tab;
+  document.getElementById('tab-listings').classList.toggle('active', tab==='listings');
+  document.getElementById('tab-buyers').classList.toggle('active', tab==='buyers');
+  document.getElementById('listings-panel').style.display = tab==='listings' ? 'block' : 'none';
+  document.getElementById('buyers-panel').style.display = tab==='buyers' ? 'block' : 'none';
+  renderManage();
+}
+
+function renderManage() {
+  // Listings
+  const ll = document.getElementById('listings-list');
+  ll.innerHTML = state.listings.map(l => `
+    <div class="list-item ${statusClass(l.status)}">
+      <div style="flex:1; min-width:0;">
+        <div class="list-name" style="font-size:14px; white-space:normal;">${l.address}</div>
+        <div class="list-meta">${l.seller} · ${l.price}</div>
+        <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+          <span class="badge ${statusBadge(l.status)}">${l.status}</span>
+          <span style="font-size:11px; color:var(--text-dim);">${l.dom} DOM · ${l.showings} showings</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  // Buyers
+  const bl = document.getElementById('buyers-list');
+  const sorted = [...state.buyers].sort((a,b) => { const o=['Hot','Active','Nurture','New']; return (o.indexOf(a.status)||99)-(o.indexOf(b.status)||99); });
+  bl.innerHTML = sorted.map(b => `
+    <div class="list-item ${statusClass(b.status)}">
+      <div class="list-avatar ${statusClass(b.status)}">${initials(b.first,b.last)}</div>
+      <div class="list-info">
+        <div class="list-name">${b.first} ${b.last}</div>
+        <div class="list-meta">${b.price} · ${b.neighborhood}</div>
+        <div class="list-meta" style="margin-top:4px; font-size:11px;">${b.musthaves}</div>
+      </div>
+      <div class="list-right">
+        <span class="badge ${statusBadge(b.status)}">${b.status}</span>
+        <span style="font-size:11px; color: ${b.preapproved==='Yes'?'var(--active)':b.preapproved==='In Progress'?'var(--nurture)':'var(--hot)'}; font-weight:600;">${b.preapproved==='Yes'?'✅ Pre-Approved':b.preapproved==='In Progress'?'⏳ In Progress':'❌ Not Pre-Approved'}</span>
+        <div style="font-size:11px; color:var(--text-dim);">${b.showings} showings</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Checklist ────────────────────────────────────────────────────────────────
+const checklistItems = [
+  { id:'c1', time:'6–7 AM',   label:'Review goals & visualize your day' },
+  { id:'c2', time:'7–8 AM',   label:'Open dashboard — review KPIs & Pivot Alerts' },
+  { id:'c3', time:'8–9 AM',   label:'Call 5 past clients / SOI' },
+  { id:'c4', time:'9–10 AM',  label:'Call 5 Haven\'t-Met prospects' },
+  { id:'c5', time:'10–11 AM', label:'Text/email 10 database contacts' },
+  { id:'c6', time:'11–12 PM', label:'Scheduled listing or buyer appointments' },
+  { id:'c7', time:'3–4 PM',   label:'Geographic farm — 10 contacts' },
+  { id:'c8', time:'5–5:30 PM','label':'Log ALL activity in system' },
+  { id:'c9', time:'5:30–6 PM','label':'Send 2 personal video texts to SOI' },
+];
+let checkedItems = {};
+try { checkedItems = JSON.parse(localStorage.getItem('mrea_checklist') || '{}'); } catch(e) {}
+
+function renderChecklist() {
+  const today = new Date().toDateString();
+  const savedDate = localStorage.getItem('mrea_check_date');
+  if (savedDate !== today) { checkedItems = {}; localStorage.setItem('mrea_check_date', today); }
+
+  document.getElementById('checklist-container').innerHTML = checklistItems.map(item => `
+    <div class="checklist-item ${checkedItems[item.id] ? 'done' : ''}" onclick="toggleCheck('${item.id}')">
+      <div class="check-box">${checkedItems[item.id] ? '✓' : ''}</div>
+      <div class="check-label">${item.label}</div>
+      <div class="check-time">${item.time}</div>
+    </div>
+  `).join('');
+}
+
+function toggleCheck(id) {
+  checkedItems[id] = !checkedItems[id];
+  try { localStorage.setItem('mrea_checklist', JSON.stringify(checkedItems)); } catch(e) {}
+  renderChecklist();
+  updateHealthScore();
+}
+
+// ── Health Score ─────────────────────────────────────────────────────────────
+function updateHealthScore() {
+  const done = Object.values(checkedItems).filter(Boolean).length;
+  const total = checklistItems.length;
+  const kpiScore = 72; // from KPIs
+  const checkScore = Math.round((done/total)*100);
+  const score = Math.round((kpiScore + checkScore) / 2);
+
+  document.getElementById('health-score').textContent = `${score}% Business Score`;
+  const dot = document.getElementById('health-dot');
+  const label = document.getElementById('health-label');
+  const pill = document.getElementById('health-pill');
+
+  if (score >= 80) {
+    dot.className = 'health-dot green';
+    label.textContent = 'HEALTHY';
+    label.style.color = 'var(--active)';
+    pill.style.borderColor = 'var(--active)';
+    pill.style.background = 'var(--active-bg)';
+  } else if (score >= 60) {
+    dot.className = 'health-dot yellow';
+    label.textContent = 'AT RISK';
+    label.style.color = 'var(--nurture)';
+    pill.style.borderColor = 'var(--nurture)';
+    pill.style.background = 'var(--nurture-bg)';
+  } else {
+    dot.className = 'health-dot red';
+    label.textContent = 'CRITICAL';
+    label.style.color = 'var(--hot)';
+    pill.style.borderColor = 'var(--hot)';
+    pill.style.background = 'var(--hot-bg)';
+  }
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+// Close on overlay tap
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
+});
+
+function openQuickAdd() { openModal('modal-log'); }
+function quickLog(type) {
+  document.getElementById('log-type').value = type;
+  document.getElementById('modal-log-title').textContent = `Log ${type}`;
+  openModal('modal-log');
+}
+
+// ── Save Activity ─────────────────────────────────────────────────────────────
+function saveActivity() {
+  const name    = document.getElementById('log-name').value.trim();
+  const type    = document.getElementById('log-type').value;
+  const source  = document.getElementById('log-source').value;
+  const outcome = document.getElementById('log-outcome').value;
+  const notes   = document.getElementById('log-notes').value.trim();
+
+  if (!name) { showToast('⚠️ Please enter a contact name', true); return; }
+
+  const now = new Date();
+  const time = now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+
+  state.activities.unshift({ type, name, source, outcome, notes: notes || outcome, time });
+
+  // If Pre-Approved — auto-add to buyers
+  if (outcome === 'Pre-Approved') {
+    const parts = name.split(' ');
+    const existing = state.buyers.find(b => `${b.first} ${b.last}`.toLowerCase() === name.toLowerCase());
+    if (!existing) {
+      state.buyers.unshift({
+        id: Date.now(),
+        first: parts[0] || name,
+        last: parts.slice(1).join(' ') || '',
+        phone: '',
+        status: 'Active',
+        preapproved: 'Yes',
+        preamt: '',
+        price: '',
+        neighborhood: '',
+        timeline: '0-3 months',
+        showings: 0,
+        musthaves: '',
+      });
+      showToast('💳 Pre-Approved! Added to Buyers tab');
+    } else {
+      existing.preapproved = 'Yes';
+      showToast('💳 Pre-Approval updated in Buyers tab');
+    }
+  } else {
+    showToast(`✅ ${type} logged successfully`);
+  }
+
+  saveState();
+  closeModal('modal-log');
+  document.getElementById('log-name').value = '';
+  document.getElementById('log-notes').value = '';
+  renderActivityLog();
+}
+
+// ── Save Lead ─────────────────────────────────────────────────────────────────
+function saveLead() {
+  const first = document.getElementById('lead-first').value.trim();
+  const last  = document.getElementById('lead-last').value.trim();
+  if (!first) { showToast('⚠️ Enter a first name', true); return; }
+
+  state.leads.push({
+    id: Date.now(),
+    first, last,
+    phone: document.getElementById('lead-phone').value,
+    email: document.getElementById('lead-email').value,
+    status: document.getElementById('lead-status').value,
+    source: document.getElementById('lead-source-new').value,
+    type:   document.getElementById('lead-type').value,
+    timeline: document.getElementById('lead-timeline').value,
+    price:  document.getElementById('lead-price').value,
+    notes:  document.getElementById('lead-notes').value,
+    touches: 0,
+  });
+
+  saveState();
+  showToast(`✅ ${first} ${last} added to pipeline`);
+  closeModal('modal-lead');
+  ['lead-first','lead-last','lead-phone','lead-email','lead-price','lead-notes'].forEach(id => { document.getElementById(id).value = ''; });
+  renderLeads();
+}
+
+// ── Save Listing ──────────────────────────────────────────────────────────────
+function saveListing() {
+  const address = document.getElementById('listing-address').value.trim();
+  if (!address) { showToast('⚠️ Enter an address', true); return; }
+
+  state.listings.push({
+    id: Date.now(),
+    address,
+    seller: document.getElementById('listing-seller').value,
+    phone:  document.getElementById('listing-phone').value,
+    price:  document.getElementById('listing-price').value,
+    status: document.getElementById('listing-status').value,
+    dom: 0, showings: 0,
+    notes:  document.getElementById('listing-notes').value,
+    closeDate: document.getElementById('listing-close').value,
+  });
+
+  saveState();
+  showToast('✅ Listing added');
+  closeModal('modal-listing');
+  ['listing-address','listing-seller','listing-phone','listing-price','listing-notes'].forEach(id => { document.getElementById(id).value = ''; });
+  renderManage();
+}
+
+// ── Save Buyer ────────────────────────────────────────────────────────────────
+function saveBuyer() {
+  const first = document.getElementById('buyer-first').value.trim();
+  const last  = document.getElementById('buyer-last').value.trim();
+  if (!first) { showToast('⚠️ Enter a first name', true); return; }
+
+  state.buyers.push({
+    id:             Date.now(),
+    first, last,
+    phone:          document.getElementById('buyer-phone').value,
+    status:         document.getElementById('buyer-status').value,
+    preapproved:    document.getElementById('buyer-preapproved').value,
+    preamt:         document.getElementById('buyer-preapproval-amt').value,
+    preapprovalExp: document.getElementById('buyer-preapproval-exp').value,
+    lender:         document.getElementById('buyer-lender').value,
+    lenderPhone:    document.getElementById('buyer-lender-phone').value,
+    price:          document.getElementById('buyer-price').value,
+    neighborhood:   document.getElementById('buyer-neighborhood').value,
+    timeline:       document.getElementById('buyer-timeline').value,
+    musthaves:      document.getElementById('buyer-musthaves').value,
+    dealBreakers:   document.getElementById('buyer-dealbreakers').value,
+    showings:       0,
+    underContract:  "No",
+    dateAdded:      new Date().toISOString().split("T")[0],
+  });
+
+  saveState();
+  showToast(`✅ ${first} ${last} added to buyers`);
+  closeModal('modal-buyer');
+  ['buyer-first','buyer-last','buyer-phone','buyer-preapproval-amt','buyer-preapproval-exp','buyer-lender','buyer-lender-phone','buyer-price','buyer-neighborhood','buyer-musthaves','buyer-dealbreakers'].forEach(id => { document.getElementById(id).value = ''; });
+  renderManage();
+}
+
+function openAddListing() { openModal('modal-listing'); }
+function openAddBuyer() { openModal('modal-buyer'); }
+function openAddLead() { openModal('modal-lead'); }
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg, isWarning) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = isWarning ? 'var(--nurture)' : 'var(--active)';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ── Add Lead button on pipeline page ─────────────────────────────────────────
+document.getElementById('page-leads').insertAdjacentHTML('beforeend',
+  '<button class="btn btn-primary" onclick="openAddLead()" style="margin-top:4px;">+ Add New Lead</button>'
+);
+
+// ══════════════════════════════════════════════════════════════════════════════
+// GOOGLE SHEETS SYNC ENGINE
+// ══════════════════════════════════════════════════════════════════════════════
+
+const Sync = {
+  scriptUrl: '',
+  syncing: false,
+  lastSync: null,
+  pendingQueue: [],
+
+  init() {
+    try { this.scriptUrl = localStorage.getItem('mrea_script_url') || ''; } catch(e) {}
+    try {
+      const q = localStorage.getItem('mrea_pending_queue');
+      if (q) this.pendingQueue = JSON.parse(q);
+    } catch(e) {}
+    this.updateSyncStatus();
+    // Auto-sync every 5 minutes if connected
+    setInterval(() => { if (this.scriptUrl) this.pullAll(); }, 5 * 60 * 1000);
+  },
+
+  isConnected() { return !!this.scriptUrl; },
+
+  setUrl(url) {
+    this.scriptUrl = url.trim();
+    try { localStorage.setItem('mrea_script_url', this.scriptUrl); } catch(e) {}
+    this.updateSyncStatus();
+    if (this.scriptUrl) this.ping();
+  },
+
+  updateSyncStatus() {
+    const el = document.getElementById('sync-status-badge');
+    const dot = document.getElementById('sync-dot');
+    if (!el) return;
+    if (this.isConnected()) {
+      el.textContent = this.lastSync
+        ? '🟢 Connected · Last sync ' + this.formatTime(this.lastSync)
+        : '🟢 Connected · Not yet synced';
+      el.style.color = 'var(--active)';
+      if (dot) { dot.style.background = 'var(--active)'; dot.style.boxShadow = '0 0 8px var(--active)'; }
+    } else {
+      el.textContent = '⚫ Not connected · Data saved locally';
+      el.style.color = 'var(--text-dim)';
+      if (dot) { dot.style.background = 'var(--text-dim)'; dot.style.boxShadow = 'none'; }
+    }
+    const pendingEl = document.getElementById('sync-pending');
+    if (pendingEl) pendingEl.textContent = this.pendingQueue.length > 0
+      ? `${this.pendingQueue.length} action${this.pendingQueue.length>1?'s':''} pending sync`
+      : '';
+  },
+
+  formatTime(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  },
+
+  async ping() {
+    if (!this.scriptUrl) return false;
+    try {
+      showToast('🔄 Testing connection...');
+      const res = await fetch(`${this.scriptUrl}?action=ping`, { method:'GET' });
+      const data = await res.json();
+      if (data.status === 'ok') {
+        showToast('✅ Google Sheets connected!');
+        this.lastSync = new Date();
+        this.updateSyncStatus();
+        await this.flushQueue();
+        return true;
+      }
+    } catch(e) {
+      showToast('❌ Connection failed. Check your URL.', true);
+    }
+    return false;
+  },
+
+  // Push a single action immediately (or queue if offline)
+  async push(action, sheetKey, data) {
+    const entry = { action, sheet: sheetKey, data, timestamp: new Date().toISOString() };
+    if (!this.isConnected()) {
+      this.pendingQueue.push(entry);
+      this.savePendingQueue();
+      this.updateSyncStatus();
+      return { queued: true };
+    }
+    return await this.execute(entry);
+  },
+
+  async execute(entry) {
+    if (!this.scriptUrl) return { error: 'No URL' };
+    try {
+      const res = await fetch(this.scriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry),
+      });
+      const result = await res.json();
+      this.lastSync = new Date();
+      this.updateSyncStatus();
+      return result;
+    } catch(e) {
+      // Queue for later if network fails
+      this.pendingQueue.push(entry);
+      this.savePendingQueue();
+      this.updateSyncStatus();
+      return { queued: true, error: e.message };
+    }
+  },
+
+  // Flush all queued actions when connection is restored
+  async flushQueue() {
+    if (!this.pendingQueue.length || !this.isConnected()) return;
+    showToast(`🔄 Syncing ${this.pendingQueue.length} pending actions...`);
+    const queue = [...this.pendingQueue];
+    this.pendingQueue = [];
+    this.savePendingQueue();
+    for (const entry of queue) {
+      await this.execute(entry);
+      await new Promise(r => setTimeout(r, 200)); // throttle
+    }
+    showToast(`✅ ${queue.length} actions synced to Google Sheets`);
+  },
+
+  // Pull all data FROM Google Sheets into app (overwrites local)
+  async pullAll() {
+    if (!this.isConnected() || this.syncing) return;
+    this.syncing = true;
+    setSyncIndicator(true);
+    try {
+      const sheets = ['leads','activity','buyers','listings'];
+      for (const sheet of sheets) {
+        const res = await fetch(`${this.scriptUrl}?action=read&sheet=${sheet}`);
+        const data = await res.json();
+        if (data.rows && data.rows.length) {
+          if (sheet === 'leads')    state.leads     = mapSheetRows(data.rows, sheet);
+          if (sheet === 'activity') state.activities= mapActivityRows(data.rows);
+          if (sheet === 'buyers')   state.buyers    = mapBuyerRows(data.rows);
+          if (sheet === 'listings') state.listings  = mapListingRows(data.rows);
+        }
+      }
+      saveState();
+      this.lastSync = new Date();
+      renderLeads();
+      renderActivityLog();
+      renderManage();
+      showToast('✅ Synced from Google Sheets');
+    } catch(e) {
+      showToast('⚠️ Sync failed — working offline', true);
+    }
+    this.syncing = false;
+    setSyncIndicator(false);
+    this.updateSyncStatus();
+  },
+
+  // Push FULL local state to Google Sheets
+  async pushAll() {
+    if (!this.isConnected() || this.syncing) return;
+    this.syncing = true;
+    setSyncIndicator(true);
+    showToast('🔄 Pushing all data to Google Sheets...');
+    try {
+      const res = await fetch(this.scriptUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'sync_all',
+          payload: {
+            leads: state.leads.map(l => mapLeadToSheet(l)),
+            activities: state.activities.map(a => mapActivityToSheet(a)),
+            buyers: state.buyers.map(b => mapBuyerToSheet(b)),
+            listings: state.listings.map(l => mapListingToSheet(l)),
+            closings: (state.closings||[]).map(c => mapClosingToSheet(c)),
+          }
+        })
+      });
+      const result = await res.json();
+      this.lastSync = new Date();
+      showToast('✅ All data pushed to Google Sheets!');
+    } catch(e) {
+      showToast('❌ Push failed. Try again.', true);
+    }
+    this.syncing = false;
+    setSyncIndicator(false);
+    this.updateSyncStatus();
+  },
+
+  savePendingQueue() {
+    try { localStorage.setItem('mrea_pending_queue', JSON.stringify(this.pendingQueue)); } catch(e) {}
+  },
+};
+
+// ── Data mapping helpers (app → sheet format) ─────────────────────────────
+function mapLeadToSheet(l) {
+  return {
+    "ID": l.id, "First Name": l.first, "Last Name": l.last,
+    "Phone": l.phone, "Email": l.email, "Status": l.status,
+    "Lead Source": l.source, "Type": l.type, "Met?": l.met || "Haven't Met",
+    "# Touches": l.touches || 0, "Timeline": l.timeline,
+    "Price Range": l.price, "Notes": l.notes,
+    "Date Added": l.dateAdded || new Date().toISOString().split('T')[0],
+  };
+}
+function mapActivityToSheet(a) {
+  return {
+    "Date":            a.date || new Date().toISOString().split("T")[0],
+    "Activity Type":   a.type,
+    "Contact Name":    a.name,
+    "Phone/Email":     a.phone || "",
+    "Lead Source":     a.source,
+    "Outcome":         a.outcome,
+    "Follow-Up Date":  a.followUpDate || "",
+    "Next Action":     a.notes || "",
+    "Lead Added?":     a.outcome === "Pre-Approved" ? "Yes" : "",
+    "Appt Set?":       a.outcome === "Appointment Set" ? "Yes" : "",
+    "Notes":           a.notes || "",
+    "Agent":           a.agent || "Agent 1",
+  };
+}
+function mapBuyerToSheet(b) {
+  return {
+    "ID":                b.id,
+    "First Name":        b.first,
+    "Last Name":         b.last,
+    "Phone":             b.phone,
+    "Email":             b.email || "",
+    "Status":            b.status,
+    "Pre-Approved?":     b.preapproved,
+    "Pre-Approval Amt":  b.preamt || "",
+    "Lender Name":       b.lender || "",
+    "Lender Phone":      b.lenderPhone || "",
+    "Pre-Approval Exp.": b.preapprovalExp || "",
+    "Price Range":       b.price,
+    "Neighborhoods":     b.neighborhood,
+    "Beds/Baths Min":    b.bedsBaths || "",
+    "Must Haves":        b.musthaves || "",
+    "Deal Breakers":     b.dealBreakers || "",
+    "Timeline":          b.timeline,
+    "# Showings Done":   b.showings || 0,
+    "Last Showing Date": b.lastShowing || "",
+    "Under Contract?":   b.underContract || "No",
+    "Contract Date":     b.contractDate || "",
+    "Target Close Date": b.closeDate || "",
+    "Agent":             b.agent || "Agent 1",
+    "Lead Source":       b.source || "",
+    "Notes":             b.notes || "",
+    "Date Added":        b.dateAdded || new Date().toISOString().split("T")[0],
+  };
+}
+function mapListingToSheet(l) {
+  return {
+    "ID":               l.id,
+    "Address":          l.address,
+    "Seller Name":      l.seller,
+    "Seller Phone":     l.phone,
+    "Status":           l.status,
+    "List Price":       l.price ? parseInt(l.price.replace(/\D/g,'')) || l.price : "",
+    "List Date":        l.listDate || new Date().toISOString().split("T")[0],
+    "Price Reduction?": l.priceReduction || "No",
+    "Reduced Price":    l.reducedPrice || "",
+    "Showings":         l.showings || 0,
+    "Feedback":         l.feedback || "",
+    "Target Close":     l.closeDate || "",
+    "Notes":            l.notes || "",
+  };
+}
+function mapClosingToSheet(c) {
+  return {
+    "ID":              c.id,
+    "Close Date":      c.closeDate || "",
+    "Client Name":     c.client || "",
+    "Address":         c.address || "",
+    "GCI ($)":         c.gci || 0,
+    "Sale Price":      c.salePrice || 0,
+    "Side":            c.side || "",
+    "Commission %":    c.commissionPct || "3.0%",
+    "Lead Source":     c.source || "",
+    "Days in Pipeline":c.daysInPipeline || 0,
+    "Referral Out?":   c.referralOut || "No",
+    "Referral Amount": c.referralAmount || 0,
+    "Taxes Est. ($)":  c.taxes || 0,
+    "Net GCI (After Taxes)": c.gci ? (c.gci - (c.referralAmount||0) - (c.taxes||0)) : 0,
+  };
+}
+
+// ── Data mapping helpers (sheet → app format) ─────────────────────────────
+function mapSheetRows(rows, sheet) {
+  return rows.filter(r => r["First Name"]).map(r => ({
+    id: r["ID"] || r._row,
+    first: r["First Name"] || "", last: r["Last Name"] || "",
+    phone: r["Phone"] || "", email: r["Email"] || "",
+    status: r["Status"] || "New", source: r["Lead Source"] || "",
+    type: r["Type"] || "Buyer", timeline: r["Timeline"] || "",
+    price: r["Price Range"] || "", notes: r["Notes"] || "",
+    touches: parseInt(r["# Touches"]) || 0,
+    met: r["Met?"] || "Haven't Met",
+    dateAdded: r["Date Added"] || "",
+  }));
+}
+function mapActivityRows(rows) {
+  return rows.filter(r => r["Contact Name"]).map(r => ({
+    type: r["Activity Type"] || "Call", name: r["Contact Name"] || "",
+    phone: r["Phone/Email"] || "", source: r["Lead Source"] || "",
+    outcome: r["Outcome"] || "", notes: r["Notes"] || "",
+    date: r["Date"] || "", time: r["Date"] ? new Date(r["Date"]).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : "",
+  }));
+}
+function mapBuyerRows(rows) {
+  return rows.filter(r => r["First Name"]).map(r => ({
+    id:              r["ID"] || r._row,
+    first:           r["First Name"] || "",
+    last:            r["Last Name"] || "",
+    phone:           r["Phone"] || "",
+    email:           r["Email"] || "",
+    status:          r["Status"] || "Active",
+    preapproved:     r["Pre-Approved?"] || "No",
+    preamt:          r["Pre-Approval Amt"] || "",
+    lender:          r["Lender Name"] || "",
+    lenderPhone:     r["Lender Phone"] || "",
+    preapprovalExp:  r["Pre-Approval Exp."] || "",
+    price:           r["Price Range"] || "",
+    neighborhood:    r["Neighborhoods"] || "",
+    bedsBaths:       r["Beds/Baths Min"] || "",
+    musthaves:       r["Must Haves"] || "",
+    dealBreakers:    r["Deal Breakers"] || "",
+    timeline:        r["Timeline"] || "",
+    showings:        parseInt(r["# Showings Done"]) || 0,
+    lastShowing:     r["Last Showing Date"] || "",
+    underContract:   r["Under Contract?"] || "No",
+    contractDate:    r["Contract Date"] || "",
+    closeDate:       r["Target Close Date"] || "",
+    agent:           r["Agent"] || "",
+    source:          r["Lead Source"] || "",
+    notes:           r["Notes"] || "",
+    dateAdded:       r["Date Added"] || "",
+  }));
+}
+function mapListingRows(rows) {
+  return rows.filter(r => r["Address"]).map(r => ({
+    id:             r["ID"] || r._row,
+    address:        r["Address"] || "",
+    seller:         r["Seller Name"] || "",
+    phone:          r["Seller Phone"] || "",
+    status:         r["Status"] || "Active",
+    price:          r["List Price"] ? "$" + Number(r["List Price"]).toLocaleString() : "",
+    listDate:       r["List Date"] || "",
+    dom:            parseInt(r["DOM"]) || 0,
+    priceReduction: r["Price Reduction?"] || "No",
+    reducedPrice:   r["Reduced Price"] || "",
+    showings:       parseInt(r["Showings"]) || 0,
+    feedback:       r["Feedback"] || "",
+    notes:          r["Notes"] || "",
+    closeDate:      r["Target Close"] || "",
+  }));
+}
+
+function setSyncIndicator(active) {
+  const fab = document.querySelector('.fab');
+  if (fab) fab.style.opacity = active ? '0.6' : '1';
+}
+
+// ── Sync hooks: wrap save functions to push to Google Sheets after each save ──
+// Uses post-init assignment to avoid function hoisting conflicts
+window.addEventListener('DOMContentLoaded', () => {}, false); // ensure DOM ready
+(function wireUpSyncHooks() {
+  const _origActivity = window.saveActivity;
+  window.saveActivity = function() {
+    _origActivity();
+    const latest = state.activities[0];
+    if (latest) Sync.push('log_activity', 'activity', mapActivityToSheet(latest));
+  };
+
+  const _origLead = window.saveLead;
+  window.saveLead = function() {
+    _origLead();
+    const latest = state.leads[state.leads.length - 1];
+    if (latest) Sync.push('append', 'leads', mapLeadToSheet(latest));
+  };
+
+  const _origListing = window.saveListing;
+  window.saveListing = function() {
+    _origListing();
+    const latest = state.listings[state.listings.length - 1];
+    if (latest) Sync.push('append', 'listings', mapListingToSheet(latest));
+  };
+
+  const _origBuyer = window.saveBuyer;
+  window.saveBuyer = function() {
+    _origBuyer();
+    const latest = state.buyers[state.buyers.length - 1];
+    if (latest) Sync.push('append', 'buyers', mapBuyerToSheet(latest));
+  };
+})();
+
+// ══════════════════════════════════════════════════════════════════════════
+// SETTINGS PAGE (5th nav tab)
+// ══════════════════════════════════════════════════════════════════════════
+
+// Add Settings page to DOM
+document.getElementById('pages').insertAdjacentHTML('beforeend', `
+<div class="page" id="page-settings">
+  <div class="section-hdr">Settings</div>
+  <div class="section-sub">Google Sheets sync & app configuration</div>
+
+  <!-- Connection Status -->
+  <div class="card" style="border-color: rgba(201,168,76,0.25);">
+    <div class="card-title">🔗 Google Sheets Connection</div>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+      <div class="health-dot green" id="sync-dot" style="width:10px;height:10px;flex-shrink:0;"></div>
+      <div id="sync-status-badge" style="font-size:13px; color:var(--text-muted);">Checking...</div>
+    </div>
+    <div id="sync-pending" style="font-size:12px; color:var(--nurture); margin-bottom:12px;"></div>
+    <div class="form-group">
+      <label class="form-label">Apps Script Web App URL</label>
+      <input class="form-input" id="script-url-input" type="url"
+        placeholder="https://script.google.com/macros/s/.../exec"
+        style="font-size:13px;">
+    </div>
+    <button class="btn btn-primary" onclick="connectSheets()" style="margin-bottom:10px;">🔗 Connect & Test</button>
+    <button class="btn btn-secondary" onclick="Sync.pullAll()">⬇️ Pull Latest from Google Sheets</button>
+    <button class="btn btn-secondary" onclick="Sync.pushAll()">⬆️ Push All Local Data to Sheets</button>
+    <button class="btn btn-secondary" onclick="Sync.flushQueue()">🔄 Retry Pending Actions</button>
+  </div>
+
+  <!-- Setup Instructions -->
+  <div class="card">
+    <div class="card-title">📋 Setup Instructions</div>
+    <div style="font-size:13px; color:var(--text-muted); line-height:2;">
+      <div style="color:var(--gold); font-weight:600; margin-bottom:8px;">One-time setup — takes about 5 minutes:</div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; gap:10px;">
+          <div style="width:24px; height:24px; border-radius:50%; background:var(--gold); color:var(--navy); font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">1</div>
+          <div>Open your <strong style="color:var(--text);">MREA spreadsheet</strong> in Google Sheets on a computer</div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div style="width:24px; height:24px; border-radius:50%; background:var(--gold); color:var(--navy); font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">2</div>
+          <div>Click <strong style="color:var(--text);">Extensions → Apps Script</strong> in the top menu</div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div style="width:24px; height:24px; border-radius:50%; background:var(--gold); color:var(--navy); font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">3</div>
+          <div><strong style="color:var(--text);">Delete all existing code</strong> in the editor and paste in the entire MREA Apps Script file</div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div style="width:24px; height:24px; border-radius:50%; background:var(--gold); color:var(--navy); font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">4</div>
+          <div>Click <strong style="color:var(--text);">Save</strong> (💾 icon), then click the <strong style="color:var(--text);">Run ▶ button</strong> with <em>testConnection</em> selected to verify</div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div style="width:24px; height:24px; border-radius:50%; background:var(--gold); color:var(--navy); font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">5</div>
+          <div>Click <strong style="color:var(--text);">Deploy → New Deployment</strong></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div style="width:24px; height:24px; border-radius:50%; background:var(--gold); color:var(--navy); font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">6</div>
+          <div>Set Type: <strong style="color:var(--text);">Web App</strong> · Execute as: <strong style="color:var(--text);">Me</strong> · Access: <strong style="color:var(--text);">Anyone</strong></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div style="width:24px; height:24px; border-radius:50%; background:var(--gold); color:var(--navy); font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">7</div>
+          <div>Click <strong style="color:var(--text);">Deploy → Authorize → Allow</strong>, then copy the <strong style="color:var(--text);">Web App URL</strong></div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div style="width:24px; height:24px; border-radius:50%; background:var(--active); color:white; font-weight:700; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">✓</div>
+          <div>Paste the URL above and tap <strong style="color:var(--text);">Connect & Test</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How Sync Works -->
+  <div class="card">
+    <div class="card-title">⚡ How Sync Works</div>
+    <div style="font-size:13px; color:var(--text-muted); line-height:1.9;">
+      <div style="margin-bottom:8px;"><strong style="color:var(--active);">Auto-sync on save</strong> — every time you log a call, add a lead, or save a listing, it instantly writes to Google Sheets.</div>
+      <div style="margin-bottom:8px;"><strong style="color:var(--new-blue);">Offline queue</strong> — if you're in the field without signal, actions are queued and sync automatically when you reconnect.</div>
+      <div style="margin-bottom:8px;"><strong style="color:var(--gold);">Pre-Approved magic</strong> — when you log "Pre-Approved" in the Activity Log, that buyer is automatically added to the Buyers tab in both the app AND Google Sheets.</div>
+      <div style="margin-bottom:8px;"><strong style="color:var(--nurture);">Auto-sort</strong> — the Apps Script automatically sorts Hot leads to the top of your Google Sheet whenever a status changes.</div>
+      <div><strong style="color:var(--text);">Two-way</strong> — pull changes made in Google Sheets back to your phone anytime with the Pull button above.</div>
+    </div>
+  </div>
+
+  <!-- App Info -->
+  <div class="card" style="text-align:center;">
+    <div style="font-family: var(--font-display); font-size:28px; color:var(--gold); font-weight:700; margin-bottom:4px;">Casa RGP</div>
+    <div style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">Agent Operating System v3 · Mobile Edition</div>
+    <div style="font-size:12px; color:var(--text-dim);">Based on The Millionaire Real Estate Agent by Gary Keller</div>
+    <div class="divider"></div>
+    <button class="btn btn-danger" onclick="if(confirm('Clear ALL local data? This cannot be undone.')) { localStorage.clear(); location.reload(); }">🗑️ Clear All Local Data</button>
+  </div>
+</div>
+`);
+
+// Add Settings button to nav
+document.getElementById('nav').insertAdjacentHTML('beforeend', `
+  <button class="nav-btn" onclick="showPage('settings',this)">
+    <span class="nav-icon">⚙️</span>
+    <span>Settings</span>
+  </button>
+`);
+
+function connectSheets() {
+  const url = document.getElementById('script-url-input').value.trim();
+  if (!url || !url.startsWith('https://script.google.com')) {
+    showToast('⚠️ Paste a valid Apps Script URL', true);
+    return;
+  }
+  Sync.setUrl(url);
+}
+
+// Pre-fill URL input if already saved
+document.getElementById('script-url-input').value = Sync.scriptUrl || '';
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadState();
+initDate();
+renderChecklist();
+renderActivityLog();
+renderManage();
+updateHealthScore();
+Sync.init();
+</script>
+</body>
+</html>
